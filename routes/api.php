@@ -32,8 +32,7 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::post('/sale',[SaleController::class,'store']);
 
     //payment
-    Route::get('/payment',[PaymentController::class,'index']);
-    Route::post('/payment',[PaymentController::class,'store']);
+    Route::post('/payment',[PaymentController::class,'payment']);
     Route::patch('/payment-update',[PaymentController::class,'cancel']);
 
     //product review
@@ -45,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::put('/cart/{id}',[CartController::class,'update']);
     Route::delete('/cart/{id}',[CartController::class,'delete']);
 
+    //checkout
     Route::get('/checkout',[SaleController::class,'index']);
     Route::get('/checkout/{id}',[SaleController::class,'show']);
     Route::post('/checkout',[SaleController::class,'checkout']);

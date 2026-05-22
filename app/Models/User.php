@@ -47,4 +47,7 @@ class User extends Authenticatable
     protected function sales():hasMany {
         return $this->hasMany(Sales::class,'user_id','id');
     }
+    protected function saldo():HasMany {
+        return $this->hasMany(Saldo::class,'user_id','id');
+    }
 }

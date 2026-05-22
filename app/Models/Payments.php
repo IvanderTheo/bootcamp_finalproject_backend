@@ -13,6 +13,7 @@ class Payments extends Model
         'paid_amount',
         'status',
         'payment_date',
+        'payment_method',
     ];
     protected $hidden = [
         'created_at',
@@ -20,7 +21,8 @@ class Payments extends Model
     ];
     protected $casts = [
         'status'=>'enum',
-        'payment_date'=>'datetime'
+        'payment_date'=>'datetime',
+        'payment_method'=>'enum'
     ];
     public function sale(): BelongsTo {
         return $this->belongsTo(Sales::class,'sale_id');
