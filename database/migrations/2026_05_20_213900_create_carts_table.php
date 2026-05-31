@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
             $table->enum('status',['active','checked_out']);
-            $table->decimal('total_pricee',12,2)->default(0);
+            $table->decimal('total_price',12,2)->default(0);
             $table->timestamps();
         });
     }

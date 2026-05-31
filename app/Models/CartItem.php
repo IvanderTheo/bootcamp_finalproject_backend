@@ -5,20 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CartItems extends Model
+class CartItem extends Model
 {
     //
+    protected $table = 'cart_items';
     protected $fillable = [
-        'card_id',
+        'cart_id',
         'product_id',
         'quantity',
         'price',
-        'sub_total'
+        'subtotal'
     ];
     public function cart():BelongsTo {
-        return $this->belongsTo(Carts::class,'card_id');
+        return $this->belongsTo(Cart::class,'card_id');
     }
     public function product():BelongsTo {
-        return $this->belongsTo(Products::class, 'product_id');
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }

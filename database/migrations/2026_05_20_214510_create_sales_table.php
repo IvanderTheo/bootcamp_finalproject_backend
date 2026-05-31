@@ -14,13 +14,14 @@ return new class extends Migration
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
             $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('table_id')->constrained('tables')->cascadeOnDelete();
             $table->string('invoice_number');
             $table->timestamp('transaction_date');
             $table->decimal('total_amount',12,2);
             $table->decimal('tax',12,2)->nullable();
             $table->decimal('discount',12,2)->nullable();
             $table->decimal('grand_total',12,2);
-            $table->enum('status',['pending','paid','cancelled']);
+            $table->enum('order_status',['paid','ongoing','completed','cancelled']);
             $table->timestamps();
         });
     }

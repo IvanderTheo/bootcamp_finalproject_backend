@@ -2,79 +2,117 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Products;
-use App\Models\SaleDetails;
-use App\Models\Sales;
+use App\Models\Product;
+use App\Models\SaleDetail;
+use App\Models\Sale;
+use App\Models\Table;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Carts;
+use App\Models\Cart;
 use Exception;
 
 class SaleController extends Controller
 {
     //
+    public function index () {
+        try {
+            $result = Sale::latest();
+            return response()->json([
+                'status'=>'success',
+                'message'=>'success retrieved data',
+                'data'=>$result
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status'=>'failed',
+                'message'=>'failed received data',
+                'error'=>$e->getMessage(),
+            ]);
+        }
+    }
+    public function show ($id) {
+        try {
+            $result = Sale::with('saleDetail')->findOrFail($id);
+            return response()->json([
+                'status'=>'success',
+                'message'=>'success retrieved data',
+                'data'=>$result
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status'=>'failed',
+                'message'=>'failed received data',
+                'error'=>$e->getMessage(),
+            ]);
+        }
+    }
     public function checkout(Request $request)
     {
         try {
-
             $validated = $request->validate([
-                'cart_id' => 'required|exists:carts,id'
+                'cart_id' => 'required|exists:carts,id',
+                'table_id'=>'required|integer|exists:tables,table_id',
+                'capacity'=>'required|integer',
             ]);
 
             DB::transaction(function() use ($validated) {
 
                 // ambil cart user yang sedang login
-                $cart = Carts::with('cartItem')
+                $cart = Cart::with('cartItems.product')
                     ->where('id', $validated['cart_id'])
                     ->where('user_id', auth()->id())
                     ->firstOrFail();
-
                 // pastikan cart tidak kosong
-                if ($cart->items->isEmpty()) {
+                if ($cart->cartItems->isEmpty()) {
                     throw new Exception('Cart kosong');
                 }
 
                 // cek stok ulang
-                foreach ($cart->items as $item) {
-                    $product = Products::find($item->product_id);
-                    
-                    if ($product->stock < $item->quantity) {
+                foreach ($cart->cartItems as $item) {
+
+                    if (!$item->product) {
                         throw new Exception(
-                            "{$product->product_name} stok tidak cukup"
+                            "Produk ID {$item->product_id} tidak ditemukan"
+                        );
+                    }
+
+                    if ($item->product->stock < $item->quantity) {
+                        throw new Exception(
+                            "{$item->product->product_name} stok tidak cukup"
                         );
                     }
                 }
+                //get table id
+                $table_id = Table::findorfail($validated['table_id']);
+                $table_id->update([
+                    'capacity'=>$validated['capacity'],
+                    'status'=>'occupied',
+                ]);
 
                 // buat sale
-                $sale = Sales::create([
+                $sale = Sale::create([
                     'user_id' => auth()->id(),
                     'invoice_number' => 'INV'.time(),
                     'total_amount' => $cart->total_price,
                     'grand_total' => $cart->total_price,
-                    'status' => 'pending'
+                    'table_id'=>$table_id,
+                    'transaction_date'=>now(),
+                    'status' => 'ongoing'
                 ]);
 
                 // simpan detail
-                foreach ($cart->items as $item) {
+                foreach ($cart->cartItems as $item) {
 
-                    SaleDetails::create([
+                    SaleDetail::create([
                         'sale_id' => $sale->id,
                         'product_id' => $item->product_id,
                         'quantity' => $item->quantity,
-                        'price' => $item->price
+                        'price' => $item->price,
+                        'sub_total'=>$item->subtotal
                     ]);
-
-                    // kurangi stok
-                    Products::where(
-                        'id',
-                        $item->product_id
-                    )->decrement(
-                        'stock',
-                        $item->quantity
-                    );
                 }
 
-                // ubah cart selesai
+                // ubah status
                 $cart->update([
                     'status' => 'checked_out'
                 ]);

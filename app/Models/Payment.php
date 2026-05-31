@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Payments extends Model
+class Payment extends Model
 {
     //
     protected $fillable = [
@@ -20,11 +22,11 @@ class Payments extends Model
         'updated_at',
     ];
     protected $casts = [
-        'status'=>'enum',
+        'status'=>PaymentStatus::class,
         'payment_date'=>'datetime',
-        'payment_method'=>'enum'
+        'payment_method'=>PaymentMethod::class,
     ];
     public function sale(): BelongsTo {
-        return $this->belongsTo(Sales::class,'sale_id');
+        return $this->belongsTo(Sale::class,'sale_id');
     }
 }

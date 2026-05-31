@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('saldos', function (Blueprint $table) {
             $table->id();
             $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
-            $table->decimal('saldo');
+            $table->decimal('saldo', 15, 2)->default(0);
             $table->enum('payment_method',['bca','bri']);
             $table->timestamps();
         });

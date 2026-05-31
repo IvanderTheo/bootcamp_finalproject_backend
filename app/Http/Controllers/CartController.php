@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CartItems;
-use App\Models\Carts;
+use App\Models\CartItem;
+use App\Models\Cart;
 use Exception;
 use Illuminate\Http\Request;
-use App\Models\Products;
+use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use App\Services\CartService;
 
@@ -14,7 +14,7 @@ class CartController extends Controller
 {
     //
     public function index() {
-        $result = Carts::where('status','active')->get();
+        $result = Cart::with('cartItems')->where('status','active')->get();
         return response()->json([
             'status'=>'success',
             'message'=>'Success Retrieved Cart',
@@ -22,7 +22,7 @@ class CartController extends Controller
         ]);
     }
     public function show($id) {
-        $result = Carts::with('cartItem')->findOrFail($id);
+        $result = Cart::with('cartItems')->findOrFail($id);
         return response()->json([
             'status'=>'success',
             'message'=>'Success Retrived Cart Item',
@@ -33,7 +33,6 @@ class CartController extends Controller
     public function addToCart(Request $request, CartService $cartService)
     {
         try {
-
             $request->validate([
                 'product_id' => 'required|exists:products,id',
                 'quantity' => [
@@ -42,7 +41,7 @@ class CartController extends Controller
                     'min:1',
                     function ($attribute, $value, $fail) use ($request) {
 
-                        $product = Products::find($request->product_id);
+                        $product = Product::find($request->product_id);
 
                         if ($product && $value > $product->stock) {
                             $fail('Quantity melebihi stok.');
@@ -52,10 +51,8 @@ class CartController extends Controller
             ]);
 
             DB::transaction(function() use ($request, $cartService) {
-
-                $product = Products::findOrFail($request->product_id);
-
-                $cart = Carts::firstOrCreate(
+                $product = Product::findOrFail($request->product_id);
+                $cart = Cart::firstOrCreate(
                     [
                         'user_id' => auth()->id(),
                         'status' => 'active'
@@ -70,7 +67,7 @@ class CartController extends Controller
                     $request->quantity
                 );
 
-                CartItems::create([
+                CartItem::create([
                     'cart_id' => $cart->id,
                     'product_id' => $product->id,
                     'quantity' => $request->quantity,
@@ -96,5 +93,15 @@ class CartController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    //delete
+    public function delete($id) {
+        $cart = Cart::findOrFail($id);
+        $cart->delete();
+        return response()->json([
+            'status'=>'success',
+            'message'=>'cart deleted'
+        ]);
     }
 }

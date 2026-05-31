@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Payments;
+use App\Models\Payment;
 use App\Models\Saldo;
-use App\Models\Sales;
+use App\Models\Sale;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,16 +17,16 @@ class PaymentController extends Controller
         try {
             $validated = $request->validate([
                 'sale_id'=>'required|exists:sales,id',
-                'paid_amount'=>'required|decimal',
-                'payment_method'=>'required|string',
+                'paid_amount'=>'required|numeric',
+                'payment_method'=>'required',
             ]);
             //validasi uang
-            $sale = Sales::findOrFail($validated['sale_id']);
+            $sale = Sale::findOrFail($validated['sale_id']);
             $grand_total = $sale->grand_total;
             if($validated['paid_amount'] < $grand_total) {
                 return response()->json([
                     'status'=>'payment_failed',
-                    'message'=>'Saldo Anda tidak cukup'
+                    'message'=>'Pembayaran Anda tidak cukup'
                 ]);
             }
 
@@ -36,7 +36,7 @@ class PaymentController extends Controller
                 if ($saldo->saldo < $grand_total) {
                     throw new Exception('Saldo tidak cukup');
                 }
-                Payments::create([
+                Payment::create([
                     'sale_id'=>$sale->id,
                     'paid_amount'=>$validated['paid_amount'],
                     'status'=>'pending',

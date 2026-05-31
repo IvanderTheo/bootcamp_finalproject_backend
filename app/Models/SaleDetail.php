@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SaleDetails extends Model
+class SaleDetail extends Model
 {
     //
     protected $fillable = [
@@ -20,9 +20,9 @@ class SaleDetails extends Model
         'updated_at',
     ];
     public function sale():BelongsTo {
-        return $this->belongsTo(Sales::class, 'sale_id');
+        return $this->belongsTo(Sale::class, 'sale_id');
     }
     public function product():BelongsTo {
-        return $this->belongsTo(Products::class, 'product_id');
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Saldo;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -13,11 +15,13 @@ class AuthController extends Controller
     public function register(Request $request) {
         try {
             $validated = $request->validate([
+                'name'=>'required|string|max:255',
                 'email' => 'required|email|unique:users',
                 'password' => 'required|string|min:8|confirmed',
             ]);
 
             $user = User::create([
+                'name'=>$validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role' => 'user',
@@ -90,5 +94,40 @@ class AuthController extends Controller
                 'message' => 'Logout failed',
             ], 500);
         }
+    }
+
+    public function profile() {
+        $result = User::with('saldo')->findOrFail(auth()->id());
+        return response()->json([
+            'status'=>'success',
+            'message'=>'success retrieved profile',
+            'data'=>$result,
+        ]);
+    }
+    public function tambahSaldo(Request $request) {
+        $validate = $request->validate([
+            'saldo' => 'required|numeric|min:10000',
+            'payment_method'=>'required'
+        ]);
+        DB::transaction(function() use ($validate) {
+            $user = User::findOrFail(auth()->id());
+            $saldo = Saldo::firstOrCreate(
+                [
+                    'user_id' => $user->id
+                ],
+                [
+                    'saldo' => 0,
+                    'payment_method' => $validate['payment_method']
+                ]
+            );
+            $saldo->increment(
+                'saldo',
+                $validate['saldo']
+            );
+        });
+        return response()->json([
+            'status'=>'success',
+            'message'=>'saldo berhasil ditambah',
+        ]);
     }
 }

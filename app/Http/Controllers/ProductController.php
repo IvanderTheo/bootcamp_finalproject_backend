@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Products;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     //
     public function index(Request $request) {
-        $query = Products::with(
-            'category',
-            'review');
+        $query = Product::with(['category']);
 
         //query berdasarkan slug
         if($request->filled('category')) {
@@ -20,10 +18,13 @@ class ProductController extends Controller
             });
         }
 
-        $products = $query
-            ->select('product_name','price','stock')
-            ->latest()
-            ->paginate(10);
+        $products = Product::with([
+            'category:id,category_name,category_slug'
+        ])
+        ->select('product_name','image_url','status','id','price')
+        ->orderBy('category_id')
+        ->paginate(10);
+
         return response()->json([
             'status'=>'sucess',
             'data'=>$products
@@ -31,7 +32,7 @@ class ProductController extends Controller
     }
 
     public function show($id) {
-        $result = Products::with('review')->findOrFail($id);
+        $result = Product::with(['review','review.user'])->findOrFail($id);
         return response()->json([
             'status'=>'sucess',
             'data'=>$result

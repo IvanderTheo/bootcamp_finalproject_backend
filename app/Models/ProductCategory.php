@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Categories extends Model
+class ProductCategory extends Model
 {
     //
     protected $fillable = [
@@ -18,6 +18,6 @@ class Categories extends Model
         'created_at',
     ];
     public function product():HasMany {
-        return $this->hasMany(Products::class,'category_id','id');
+        return $this->hasMany(Product::class,'category_id','id');
     }
 }
